@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JanSeva Dynamic Political CMS & Public Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Rozha+One&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              saffron: '#FF6B00',
+              saffronLight: '#FFF4EB',
+              saffronDark: '#D95700',
+              navy: '#0A192F',
+              navyLight: '#172A45',
+              green: '#138808',
+              greenLight: '#EAF6EC',
+              gold: '#D97706'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Rozha One"', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Custom scrollbar and animations */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .tricolor-gradient {
+      background: linear-gradient(135deg, #FF6B00 0%, #FFFFFF 50%, #138808 100%);
+    }
+    .badge-shimmer {
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .tab-active {
+      border-bottom: 3px solid #FF6B00;
+      color: #FF6B00;
+      font-weight: 700;
+    }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Top Switcher Bar: Seamless switching between Public Website & Mobile CMS Admin Phone Interface -->
+  <div class="bg-slate-900 text-white text-xs px-4 py-2 flex flex-wrap items-center justify-between border-b border-slate-800 sticky top-0 z-50">
+    <div class="flex items-center space-x-2">
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="font-medium tracking-wide">CMS Engine: <strong class="text-emerald-400">Live Sync Active</strong></span>
+      <span class="hidden md:inline text-slate-400">| Public Portal & Mobile-First Admin CMS</span>
+    </div>
+    <div class="flex items-center space-x-3">
+      <span id="syncIndicator" class="text-[11px] text-slate-300 hidden sm:inline"><i class="fa-solid fa-arrows-rotate mr-1 text-sky-400"></i> Cloud Synced</span>
+      <button onclick="toggleViewMode()" id="viewSwitchBtn" class="bg-brand-saffron hover:bg-brand-saffronDark text-white font-semibold px-3 py-1 rounded-md text-xs transition flex items-center gap-1.5 shadow">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span id="viewSwitchText">Switch to Mobile Admin CMS</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Confirmation & Preview Modal -->
+  <div id="appModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990] flex items-center justify-center p-4 hidden">
+    <div id="appModalContent" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto">
+      <!-- Injected dynamically -->
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. PUBLIC PORTAL VIEW (Dynamic Campaign Website)                           -->
+  <!-- ========================================================================= -->
+  <div id="publicView" class="w-full flex-grow flex flex-col">
+    <!-- Main Public Header -->
+    <header class="glass-nav sticky top-[33px] z-40 border-b border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-brand-saffron to-brand-gold flex items-center justify-center text-white shadow-md">
+            <i class="fa-solid fa-landmark-flag text-xl"></i>
+          </div>
+          <div>
+            <h1 id="publicHeaderName" class="text-xl font-bold tracking-tight text-slate-900 leading-tight">Fusram Sarpanch (भाई फुराराम)</h1>
+            <p id="publicHeaderDesignation" class="text-xs text-slate-500 font-medium">Sarpanch & Head of Village | Gram Panchayat Thala</p>
+          </div>
+        </div>
+
+        <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-700">
+          <a href="#about" class="hover:text-brand-saffron transition">About Leader</a>
+          <a href="#news" class="hover:text-brand-saffron transition">Latest News</a>
+          <a href="#events" class="hover:text-brand-saffron transition">Public Events</a>
+          <a href="#gallery" class="hover:text-brand-saffron transition">Photo Gallery</a>
+          <a href="#videos" class="hover:text-brand-saffron transition">Speeches & Videos</a>
+          <a href="#achievements" class="hover:text-brand-saffron transition">Work & Impact</a>
+          <a href="#contact" class="hover:text-brand-saffron transition">Connect</a>
+        </nav>
+
+        <div class="flex items-center gap-3">
+          <button onclick="toggleLiveChatWidget()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition">
+            <i class="fa-solid fa-comments"></i>
+            <span class="hidden sm:inline">Citizen Chat</span>
+          </button>
+          <button onclick="switchToAdmin('login')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm transition">
+            <i class="fa-solid fa-lock text-brand-saffron"></i>
+            <span>Admin Portal</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- LIVE BROADCAST BANNER (When Sarpanch is Live) -->
+    <div id="sarpanchLiveBanner" class="hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white py-2.5 px-4 shadow-md sticky top-[113px] z-30">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+        <div class="flex items-center gap-2.5">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+          </span>
+          <span class="font-black tracking-wider uppercase bg-white/20 px-2 py-0.5 rounded text-[11px]">LIVE BROADCAST</span>
+          <span id="sarpanchLiveTitle" class="font-bold">भाई फुराराम सरपंच ग्राम सभा से लाइव संबोधन</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="sarpanchLiveActionBtn" href="https://youtube.com" target="_blank" class="bg-white text-red-600 hover:bg-red-50 font-bold px-3 py-1 rounded-full text-xs shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-play"></i>
+            <span>Watch Live Now</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-b from-brand-saffronLight via-white to-slate-50 py-12 lg:py-20 border-b border-slate-200 overflow-hidden">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-brand-saffron/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-brand-green/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-amber-200 text-brand-saffronDark text-xs font-semibold shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-saffron"></span>
+              <span id="heroMotto">ग्राम सेवा ही ईश्वर सेवा • गाँव का विकास, सबका विश्वास</span>
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Transforming <span class="text-brand-saffron" id="heroConstituency">Gram Panchayat Thala</span> with Dedication & Action.
+            </h1>
+            <p id="heroBio" class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
+              Dedicated to clean drinking water, paved village streets, solar lighting, youth employment, and farmer prosperity for every household in Thala village.
+            </p>
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+              <a href="#events" class="bg-brand-saffron hover:bg-brand-saffronDark text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-brand-saffron/20 transition flex items-center gap-2">
+                <i class="fa-regular fa-calendar-check"></i>
+                <span>Upcoming Gram Sabha</span>
+              </a>
+              <button onclick="toggleLiveChatWidget()" class="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2">
+                <i class="fa-solid fa-comments text-brand-saffron"></i>
+                <span>Live Chat with Office</span>
+              </button>
+            </div>
+
+            <!-- Social Media Handles (Dynamically Managed) -->
+            <div class="pt-4 flex items-center justify-center lg:justify-start gap-3 text-slate-600" id="heroSocialContainer">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Hero Image & Quick Info Card -->
+          <div class="lg:col-span-5 flex flex-col items-center">
+            <div class="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900 group">
+              <!-- Visual Card matching Bhai Furaram Sarpanch's photo -->
+              <div id="heroLeaderImgContainer" class="w-full h-96 relative overflow-hidden bg-gradient-to-b from-amber-100 via-orange-50 to-slate-200 flex items-center justify-center">
+                <svg id="heroLeaderSvg" viewBox="0 0 500 620" class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Background draped tent curtains matching the photo -->
+                  <defs>
+                    <linearGradient id="bgDrape" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#fdba74"/>
+                      <stop offset="30%" stop-color="#fed7aa"/>
+                      <stop offset="60%" stop-color="#fef3c7"/>
+                      <stop offset="100%" stop-color="#e2e8f0"/>
+                    </linearGradient>
+                    <linearGradient id="skinTone" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#b47852"/>
+                      <stop offset="50%" stop-color="#9a5e3a"/>
+                      <stop offset="100%" stop-color="#7c4627"/>
+                    </linearGradient>
+                    <linearGradient id="whiteKurta" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#ffffff"/>
+                      <stop offset="50%" stop-color="#f8fafc"/>
+                      <stop offset="100%" stop-color="#e2e8f0"/>
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Backdrop pleats -->
+                  <rect width="500" height="620" fill="url(#bgDrape)"/>
+                  <path d="M 0,0 Q 80,300 0,620 Z" fill="#fb923c" opacity="0.6"/>
+                  <path d="M 20,0 Q 140,250 80,620 Z" fill="#fdba74" opacity="0.5"/>
+                  <path d="M 120,0 Q 220,300 180,620 Z" fill="#fef08a" opacity="0.4"/>
+                  <path d="M 240,0 Q 320,300 290,620 Z" fill="#fef9c3" opacity="0.4"/>
+                  <path d="M 350,0 Q 450,250 420,620 Z" fill="#fef08a" opacity="0.3"/>
+                  
+                  <!-- White Kurta / Clothes -->
+                  <path d="M 110,360 L 160,310 C 200,340 300,340 340,310 L 400,360 C 430,420 480,500 500,620 L 0,620 C 20,510 70,420 110,360 Z" fill="url(#whiteKurta)"/>
+                  <!-- Kurta folds & shadows -->
+                  <path d="M 210,335 C 240,365 260,365 290,335 L 285,480 C 265,490 235,490 215,480 Z" fill="#cbd5e1" opacity="0.4"/>
+                  <path d="M 250,335 L 250,560" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+                  <!-- Kurta Buttons -->
+                  <circle cx="250" cy="370" r="3.5" fill="#e2e8f0" stroke="#64748b"/>
+                  <circle cx="250" cy="420" r="3.5" fill="#e2e8f0" stroke="#64748b"/>
+                  <circle cx="250" cy="470" r="3.5" fill="#e2e8f0" stroke="#64748b"/>
+
+                  <!-- Gamcha / Saafa on Left Shoulder with green border -->
+                  <path d="M 160,320 C 180,390 190,460 200,540 C 170,550 140,545 130,520 C 135,440 140,370 160,320 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+                  <path d="M 155,340 C 172,400 182,470 192,538" stroke="#059669" stroke-width="3" fill="none"/>
+                  <path d="M 165,340 C 180,400 188,470 196,538" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+
+                  <!-- Right Drape / Scarf -->
+                  <path d="M 340,320 C 320,400 310,480 300,560 L 325,565 C 338,485 350,405 355,325 Z" fill="#ffffff" opacity="0.9"/>
+                  <path d="M 335,340 C 318,410 310,485 303,558" stroke="#059669" stroke-width="2.5" fill="none"/>
+
+                  <!-- Gold Necklace Chain around neck -->
+                  <path d="M 215,310 Q 250,345 285,310" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round"/>
+
+                  <!-- Neck -->
+                  <path d="M 215,260 L 215,320 Q 250,335 285,320 L 285,260 Z" fill="url(#skinTone)"/>
+
+                  <!-- Face Shape -->
+                  <path d="M 180,180 C 180,260 195,305 250,305 C 305,305 320,260 320,180 C 320,110 305,95 250,95 C 195,95 180,110 180,180 Z" fill="url(#skinTone)"/>
+
+                  <!-- Ears -->
+                  <path d="M 175,170 C 165,170 165,215 178,220 Z" fill="#9a5e3a"/>
+                  <path d="M 325,170 C 335,170 335,215 322,220 Z" fill="#9a5e3a"/>
+
+                  <!-- Hair & Volume -->
+                  <path d="M 175,170 C 168,125 190,75 250,75 C 310,75 332,125 325,170 C 315,120 305,98 250,100 C 195,98 185,120 175,170 Z" fill="#1e1b18"/>
+                  <path d="M 210,85 Q 250,70 290,85 Q 310,100 320,130 Q 305,95 250,95 Q 195,95 180,130 Z" fill="#0f0e0c"/>
+
+                  <!-- Red Tilak on Forehead -->
+                  <path d="M 248,135 Q 250,120 252,135 Q 250,145 248,135 Z" fill="#dc2626"/>
+                  <circle cx="250" cy="148" r="2.5" fill="#f59e0b"/>
+
+                  <!-- Eyebrows (Thick & Expressive) -->
+                  <path d="M 195,160 Q 220,150 238,162" fill="none" stroke="#1c1917" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M 262,162 Q 280,150 305,160" fill="none" stroke="#1c1917" stroke-width="5" stroke-linecap="round"/>
+
+                  <!-- Eyes & Warm Smile -->
+                  <ellipse cx="218" cy="175" rx="10" ry="6" fill="#ffffff"/>
+                  <circle cx="220" cy="175" r="4.5" fill="#292524"/>
+                  <circle cx="222" cy="173" r="1.5" fill="#ffffff"/>
+
+                  <ellipse cx="282" cy="175" rx="10" ry="6" fill="#ffffff"/>
+                  <circle cx="280" cy="175" r="4.5" fill="#292524"/>
+                  <circle cx="282" cy="173" r="1.5" fill="#ffffff"/>
+
+                  <!-- Nose -->
+                  <path d="M 248,165 Q 252,205 244,215 Q 250,220 256,215 Q 251,205 252,165" fill="#7c4627" opacity="0.6"/>
+
+                  <!-- Full Beard & Mustache with Smile -->
+                  <path d="M 205,225 Q 250,225 295,225 C 290,238 275,245 250,245 C 225,245 210,238 205,225 Z" fill="#1c1917"/>
+                  <!-- Warm White Smile -->
+                  <path d="M 220,235 Q 250,255 280,235 Q 250,248 220,235 Z" fill="#ffffff"/>
+                  <!-- Full Trimmed Beard along Jawline -->
+                  <path d="M 182,195 C 182,270 200,300 250,300 C 300,300 318,270 318,195 C 310,240 295,275 250,278 C 205,275 190,240 182,195 Z" fill="#1c1917"/>
+                </svg>
+
+                <img id="heroLeaderImg" src="" alt="Fusram Sarpanch" class="w-full h-full object-cover object-top absolute inset-0 hidden" onerror="this.classList.add('hidden'); document.getElementById('heroLeaderSvg').classList.remove('hidden');"/>
+              </div>
+
+              <!-- Hindi Card Banner as requested: भाई फुराराम सरपंच ❤️ -->
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-900/90 to-transparent flex flex-col justify-end p-5 text-white">
+                <div class="inline-flex items-center gap-2 bg-white text-slate-950 px-4 py-1.5 rounded-full text-sm font-extrabold shadow-lg w-fit mb-2 border border-amber-300">
+                  <span class="tracking-wide font-sans">भाई फुराराम सरपंच</span>
+                  <span class="text-rose-500 text-base">❤️</span>
+                </div>
+                <span class="text-xs uppercase tracking-wider font-bold text-amber-300" id="heroRoleBadge">Sarpanch & Village Head</span>
+                <h3 class="text-2xl font-bold" id="heroCardName">Fusram Sarpanch</h3>
+                <p class="text-xs text-slate-300 mt-1" id="heroOfficeTerm">Gram Panchayat Thala • Serving with Integrity</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Updates Ticker (Controlled by Admin CMS) -->
+    <div class="bg-brand-navy text-white py-3 border-y border-brand-navyLight shadow-inner overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 flex items-center gap-4">
+        <span class="bg-brand-saffron text-white text-xs uppercase px-2.5 py-1 rounded font-bold tracking-wider shrink-0 flex items-center gap-1.5">
+          <i class="fa-solid fa-bolt"></i> Live Feed
+        </span>
+        <div class="overflow-x-auto whitespace-nowrap text-sm text-slate-300 flex items-center gap-8 scrollbar-none" id="newsTicker">
+          <span>Loading live announcements from field office...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest News & Press Releases Section -->
+    <section id="news" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+        <div>
+          <span class="text-brand-saffron font-bold text-xs uppercase tracking-widest">Media Desk</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Latest News & Press Statements</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="filterContent('news', 'all')" class="text-xs px-3 py-1.5 rounded-full bg-slate-900 text-white font-semibold">All News</button>
+          <button onclick="filterContent('news', 'Development')" class="text-xs px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">Development</button>
+          <button onclick="filterContent('news', 'Press Release')" class="text-xs px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">Press Release</button>
+        </div>
+      </div>
+
+      <!-- News Cards Container -->
+      <div id="publicNewsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Injected via real-time DB -->
+      </div>
+    </section>
+
+    <!-- Upcoming Events & Rallies Section -->
+    <section id="events" class="py-16 bg-slate-100 border-y border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+          <div>
+            <span class="text-brand-saffron font-bold text-xs uppercase tracking-widest">Public Outreach</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Jan Sabha, Rallies & Office Schedule</h2>
+          </div>
+          <span class="text-xs text-slate-500 font-medium bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+            <i class="fa-regular fa-clock text-brand-saffron mr-1"></i> Real-time schedule
+          </span>
+        </div>
+
+        <div id="publicEventsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Injected via real-time DB -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Photo Gallery Section -->
+    <section id="gallery" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+        <div>
+          <span class="text-brand-saffron font-bold text-xs uppercase tracking-widest">Event Photo Stream</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Constituency In Action</h2>
+          <p class="text-sm text-slate-500">Live field photographs uploaded directly by campaign staff from Android/iOS phones.</p>
+        </div>
+        <!-- Album Filter Chips -->
+        <div id="publicAlbumFilters" class="flex flex-wrap gap-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <div id="publicPhotosContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Injected via real-time DB -->
+      </div>
+    </section>
+
+    <!-- Video Speeches & Updates Section -->
+    <section id="videos" class="py-16 bg-slate-900 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+          <div>
+            <span class="text-amber-400 font-bold text-xs uppercase tracking-widest">Multimedia</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Speeches, TV Debates & Ground Reports</h2>
+          </div>
+        </div>
+
+        <div id="publicVideosContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Injected via real-time DB -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Achievements / Report Card Section -->
+    <section id="achievements" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <span class="text-brand-saffron font-bold text-xs uppercase tracking-widest">Constituency Report Card</span>
+        <h2 class="text-3xl font-bold text-slate-900 mt-1">Promises Kept & Key Milestones</h2>
+        <p class="text-slate-600 text-sm mt-2">Transparent tracking of infrastructure, education, and welfare funds deployed in our constituency.</p>
+      </div>
+
+      <div id="publicAchievementsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Injected via real-time DB -->
+      </div>
+    </section>
+
+    <!-- Citizen Grievance & Connect Section -->
+    <section id="contact" class="py-16 bg-gradient-to-b from-slate-50 to-amber-50/50 border-t border-slate-200">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200">
+          <div class="text-center mb-8">
+            <span class="text-brand-saffron font-bold text-xs uppercase tracking-widest">Direct Contact</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Citizen Grievance & Feedback Portal</h2>
+            <p class="text-slate-500 text-sm mt-1">Messages arrive instantly on the MP's mobile administration dashboard.</p>
+          </div>
+
+          <div class="mb-6 flex flex-wrap justify-center gap-4 text-xs font-semibold">
+            <button onclick="toggleLiveChatWidget()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-300 px-4 py-2 rounded-xl flex items-center gap-2 transition">
+              <i class="fa-solid fa-comments text-amber-600"></i>
+              <span>Open Quick Live Chat</span>
+            </button>
+            <a id="contactWhatsAppBtn" href="#" target="_blank" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-300 px-4 py-2 rounded-xl flex items-center gap-2 transition">
+              <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+              <span>WhatsApp Direct Message</span>
+            </a>
+          </div>
+
+          <form id="grievanceForm" onsubmit="submitGrievance(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Your Full Name *</label>
+                <input type="text" id="gName" required placeholder="e.g. Ramesh Chandra Sharma" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number *</label>
+                <input type="tel" id="gPhone" required placeholder="10-digit mobile number" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tehsil / Ward / Village *</label>
+                <input type="text" id="gLocation" required placeholder="e.g. Ward 14, Main Bazar" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Subject / Category *</label>
+                <select id="gCategory" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-saffron focus:outline-none bg-white">
+                  <option value="Roads & Infrastructure">Roads & Infrastructure</option>
+                  <option value="Drinking Water / Electricity">Drinking Water / Electricity</option>
+                  <option value="Healthcare & Hospitals">Healthcare & Hospitals</option>
+                  <option value="Schools & Education">Schools & Education</option>
+                  <option value="General Suggestion">General Suggestion</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Grievance / Message Details *</label>
+              <textarea id="gMessage" rows="3" required placeholder="Describe your issue or suggestion clearly..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-saffron focus:outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Send Directly to Office CMS</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Public Footer -->
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-brand-saffron flex items-center justify-center text-white">
+            <i class="fa-solid fa-landmark"></i>
+          </div>
+          <div>
+            <p class="text-white font-semibold" id="footerName">Shri Rajeshwar Varma Campaign Office</p>
+            <p class="text-slate-400">Constituency Head Office: Civil Lines, Vikas Nagar</p>
+          </div>
+        </div>
+        <div id="footerSocialContainer" class="flex items-center gap-3 text-base">
+          <!-- Rendered dynamically -->
+        </div>
+        <p>© 2026 Constituency Representation Office. Dynamic CMS Enabled.</p>
+        <button onclick="switchToAdmin('login')" class="text-slate-400 hover:text-white underline">
+          Campaign Staff Login
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CITIZEN FLOATING LIVE CHAT WIDGET                                          -->
+  <!-- ========================================================================= -->
+  <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end">
+    <!-- Chat Window Container -->
+    <div id="liveChatWindow" class="hidden w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col mb-3 transition-all duration-300 transform scale-95 origin-bottom-right">
+      <!-- Chat Header -->
+      <div class="bg-gradient-to-r from-brand-saffron to-amber-600 p-3.5 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="relative w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-comments"></i>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold leading-tight" id="chatHeaderTitle">Sarpanch Office Live Chat</h4>
+            <span class="text-[10px] text-amber-100 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>Online • Typically replies instantly</span>
+            </span>
+          </div>
+        </div>
+        <button onclick="toggleLiveChatWidget()" class="text-white/80 hover:text-white w-6 h-6 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Chat Messages Scroll Area -->
+      <div id="liveChatMessagesArea" class="p-3 h-64 overflow-y-auto space-y-2.5 bg-slate-50 text-xs">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Chat Input Field -->
+      <form id="liveChatSendForm" onsubmit="sendLiveChatMessage(event)" class="p-2 bg-white border-t border-slate-100 flex items-center gap-2">
+        <input type="text" id="liveChatUserInput" required placeholder="Type your message to Sarpanch..." class="flex-grow px-3 py-2 text-xs bg-slate-100 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand-saffron border border-slate-200" />
+        <button type="submit" class="w-8 h-8 rounded-xl bg-brand-saffron hover:bg-brand-saffronDark text-white flex items-center justify-center shrink-0 shadow">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Floating Chat Trigger Button -->
+    <button onclick="toggleLiveChatWidget()" class="bg-brand-saffron hover:bg-brand-saffronDark text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 font-bold text-xs transition duration-200 hover:scale-105">
+      <i class="fa-solid fa-comment-dots text-lg"></i>
+      <span class="hidden sm:inline">Live Chat</span>
+      <span id="chatUnreadDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 hidden"></span>
+    </button>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 2. MOBILE-FIRST ADMIN PANEL (CMS PHONE WORKFLOW INTERFACE)               -->
+  <!-- ========================================================================= -->
+  <div id="adminView" class="w-full flex-grow hidden bg-slate-900 py-4 px-2 sm:px-6">
+    <div class="max-w-md mx-auto bg-slate-950 text-slate-100 rounded-3xl shadow-2xl border border-slate-800 overflow-hidden flex flex-col min-h-[780px]">
+      
+      <!-- Mobile Top Bar with Status & Role -->
+      <div class="bg-slate-900 p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-brand-saffron/20 text-brand-saffron flex items-center justify-center font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-white tracking-wide">JanSeva Mobile CMS</span>
+              <span id="currentRoleBadge" class="text-[10px] bg-emerald-500/20 text-emerald-400 font-semibold px-2 py-0.5 rounded-full">Super Admin</span>
+            </div>
+            <p class="text-[11px] text-slate-400" id="adminUserGreeting">Logged in as: Campaign Lead</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Role selector simulation for testing permissions -->
+          <select id="roleSwitcher" onchange="changeRole(this.value)" class="bg-slate-800 text-[11px] text-amber-300 font-medium px-2 py-1 rounded border border-slate-700">
+            <option value="SUPER_ADMIN">Super Admin</option>
+            <option value="CONTENT_ADMIN">Content Admin</option>
+            <option value="EDITOR">Editor</option>
+          </select>
+          <button onclick="logoutAdmin()" title="Logout" class="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Quick Tab Selector -->
+      <div class="bg-slate-900/90 px-2 pt-2 border-b border-slate-800 flex items-center justify-between overflow-x-auto text-xs whitespace-nowrap scrollbar-none">
+        <button onclick="switchAdminTab('overview')" id="tab-overview" class="admin-tab-btn px-3 py-2 text-brand-saffron border-b-2 border-brand-saffron font-bold">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+        </button>
+        <button onclick="switchAdminTab('profile')" id="tab-profile" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-user-pen mr-1"></i> Profile & Photo
+        </button>
+        <button onclick="switchAdminTab('livechat')" id="tab-livechat" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-tower-broadcast mr-1"></i> Live Stream & Chat
+        </button>
+        <button onclick="switchAdminTab('photos')" id="tab-photos" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-camera mr-1"></i> Photos
+        </button>
+        <button onclick="switchAdminTab('news')" id="tab-news" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-newspaper mr-1"></i> News
+        </button>
+        <button onclick="switchAdminTab('events')" id="tab-events" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-calendar-plus mr-1"></i> Events
+        </button>
+        <button onclick="switchAdminTab('videos')" id="tab-videos" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-video mr-1"></i> Videos
+        </button>
+        <button onclick="switchAdminTab('messages')" id="tab-messages" class="admin-tab-btn px-3 py-2 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-inbox mr-1"></i> Grievances
+        </button>
+      </div>
+
+      <!-- Tab 1: Overview Dashboard -->
+      <div id="adminTab-overview" class="p-4 flex-grow space-y-4 overflow-y-auto">
+        <!-- Quick Stats Cards -->
+        <div class="grid grid-cols-4 gap-2">
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400">Photos</span>
+            <p class="text-base font-bold text-white mt-0.5" id="statPhotos">0</p>
+          </div>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400">News</span>
+            <p class="text-base font-bold text-amber-400 mt-0.5" id="statNews">0</p>
+          </div>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400">Events</span>
+            <p class="text-base font-bold text-emerald-400 mt-0.5" id="statEvents">0</p>
+          </div>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400">Chats</span>
+            <p class="text-base font-bold text-sky-400 mt-0.5" id="statChats">0</p>
+          </div>
+        </div>
+
+        <!-- Rapid Actions for Field Staff on Phone -->
+        <div class="bg-gradient-to-r from-brand-saffron/10 via-amber-500/10 to-transparent p-4 rounded-2xl border border-brand-saffron/30">
+          <div class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase mb-2">
+            <i class="fa-solid fa-bolt"></i> Quick Field Actions
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Update leader profile, go live on YouTube/Facebook, or upload today's rally photos directly.</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="switchAdminTab('profile')" class="bg-brand-saffron hover:bg-brand-saffronDark text-white text-[11px] font-semibold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 shadow">
+              <i class="fa-solid fa-user-pen"></i>
+              <span>Update Photo</span>
+            </button>
+            <button onclick="switchAdminTab('livechat')" class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-semibold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 shadow">
+              <i class="fa-solid fa-tower-broadcast"></i>
+              <span>Go Live Stream</span>
+            </button>
+            <button onclick="switchAdminTab('photos')" class="bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-semibold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 border border-slate-700">
+              <i class="fa-solid fa-camera"></i>
+              <span>Upload Photos</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Activities Feed in CMS -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Recent Activity on Website</span>
+            <span class="text-[10px] text-emerald-400 font-normal">Real-time sync</span>
+          </h4>
+          <div id="adminRecentActivity" class="space-y-2 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Politician Profile & Photo Update (Complete Phone Manager) -->
+      <div id="adminTab-profile" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-id-card text-brand-saffron"></i>
+              <span>Politician Profile & Photo Manager</span>
+            </h3>
+            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-semibold">Live Editable</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-4">Upload or replace the real profile photo directly from your phone camera or gallery, and update all social accounts.</p>
+
+          <form id="profileUpdateForm" onsubmit="handleProfileUpdate(event)" class="space-y-3.5 text-xs">
+            
+            <!-- Direct Profile Photo Picker from Phone -->
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <label class="block text-slate-300 font-semibold mb-2 flex items-center justify-between">
+                <span>Leader Profile Picture *</span>
+                <span class="text-[10px] text-amber-400 font-normal">Tap to pick from Phone</span>
+              </label>
+
+              <div class="flex items-center gap-3">
+                <div class="w-16 h-16 rounded-2xl overflow-hidden bg-slate-800 border-2 border-brand-saffron shrink-0 relative flex items-center justify-center">
+                  <img id="adminProfilePreviewImg" src="" class="w-full h-full object-cover object-top hidden" />
+                  <i id="adminProfilePlaceholderIcon" class="fa-solid fa-user text-2xl text-slate-500"></i>
+                </div>
+
+                <div class="flex-grow space-y-1.5">
+                  <div class="relative">
+                    <input type="file" id="profilePhotoFileInput" accept="image/*" onchange="handleProfilePhotoUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                    <button type="button" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-3 rounded-lg border border-slate-700 text-xs flex items-center justify-center gap-1.5 pointer-events-none">
+                      <i class="fa-solid fa-camera text-brand-saffron"></i>
+                      <span>Choose New Photo from Device</span>
+                    </button>
+                  </div>
+                  <input type="text" id="profPhotoUrl" placeholder="Or enter Image URL (Optional)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-[11px] focus:outline-none focus:border-brand-saffron" oninput="updateProfilePreviewFromUrl(this.value)" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Info Fields -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Full Name (English) *</label>
+                <input type="text" id="profName" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Hindi Display Name *</label>
+                <input type="text" id="profHindiName" placeholder="भाई फुराराम सरपंच ❤️" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Designation *</label>
+                <input type="text" id="profDesignation" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Constituency / Village *</label>
+                <input type="text" id="profConstituency" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Campaign Motto / Slogan</label>
+              <input type="text" id="profMotto" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Leader Biography</label>
+              <textarea id="profBio" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs"></textarea>
+            </div>
+
+            <!-- Social Media & Official Accounts Section -->
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
+              <label class="block text-amber-400 font-bold uppercase tracking-wider text-[10px]">
+                <i class="fa-solid fa-share-nodes mr-1"></i> Official Social Media & Channel Links
+              </label>
+
+              <div>
+                <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2 text-pink-400">
+                  <i class="fa-brands fa-instagram w-5"></i>
+                  <input type="text" id="profInstagram" placeholder="Instagram Profile Link (e.g. https://instagram.com/fusram_sarpanch)" class="w-full bg-transparent p-2 text-white text-xs focus:outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2 text-blue-500">
+                  <i class="fa-brands fa-facebook w-5"></i>
+                  <input type="text" id="profFacebook" placeholder="Facebook Page Link" class="w-full bg-transparent p-2 text-white text-xs focus:outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2 text-red-500">
+                  <i class="fa-brands fa-youtube w-5"></i>
+                  <input type="text" id="profYoutube" placeholder="YouTube Channel Link" class="w-full bg-transparent p-2 text-white text-xs focus:outline-none" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2 text-slate-300">
+                    <i class="fa-brands fa-x-twitter w-5"></i>
+                    <input type="text" id="profTwitter" placeholder="Twitter/X Link" class="w-full bg-transparent p-2 text-white text-xs focus:outline-none" />
+                  </div>
+                </div>
+                <div>
+                  <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2 text-emerald-400">
+                    <i class="fa-brands fa-whatsapp w-5"></i>
+                    <input type="text" id="profWhatsapp" placeholder="WhatsApp Number" class="w-full bg-transparent p-2 text-white text-xs focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Save Profile & Update Website Instantly</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab: Live Broadcast & Live Citizen Chat Manager -->
+      <div id="adminTab-livechat" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        
+        <!-- Live Stream Announcement Card (Go Live) -->
+        <div class="bg-gradient-to-br from-red-950/60 to-slate-900 p-4 rounded-2xl border border-red-500/40">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-tower-broadcast text-red-500 animate-pulse"></i>
+              <span>Live Stream Broadcast Desk</span>
+            </h3>
+            <span id="liveStatusBadge" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold">OFFLINE</span>
+          </div>
+          <p class="text-[11px] text-slate-300 mb-3">When you or Sarpanch goes Live on Facebook/YouTube, turn this switch ON to immediately notify visitors on the public portal.</p>
+
+          <form id="liveStreamForm" onsubmit="handleLiveStreamToggle(event)" class="space-y-2.5 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1">Live Broadcast Title</label>
+              <input type="text" id="adminLiveTitle" placeholder="e.g. भाई फुराराम सरपंच ग्राम सभा से लाइव संबोधन" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+            <div>
+              <label class="block text-slate-300 mb-1">Live Video Stream Link (YouTube / Facebook Live)</label>
+              <input type="text" id="adminLiveUrl" placeholder="https://youtube.com/live/... or facebook.com/..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+            
+            <div class="flex items-center justify-between pt-1">
+              <button type="submit" id="toggleLiveStreamBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl shadow flex items-center justify-center gap-2">
+                <i class="fa-solid fa-satellite-dish"></i>
+                <span id="toggleLiveStreamText">Go Live & Show Banner</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Citizen Live Chat Messages Inbox -->
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-comments text-sky-400"></i>
+              <span>Live Citizen Chat Messages (<span id="adminLiveChatCount">0</span>)</span>
+            </h4>
+            <button onclick="clearChatDemo()" class="text-[10px] text-slate-400 hover:text-white">Reset Demo</button>
+          </div>
+
+          <div id="adminLiveChatList" class="space-y-2.5 text-xs max-h-72 overflow-y-auto">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Admin Quick Reply box -->
+          <form onsubmit="adminSendReply(event)" class="mt-3 pt-3 border-t border-slate-800 flex items-center gap-2">
+            <input type="text" id="adminReplyInput" placeholder="Reply to citizens as Sarpanch Office..." class="flex-grow bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-brand-saffron" />
+            <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white px-3 py-2 rounded-lg font-bold text-xs shrink-0 shadow">
+              <i class="fa-solid fa-reply"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab 2: Photos Management (Mobile Upload + Compression + Albums) -->
+      <div id="adminTab-photos" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+            <i class="fa-solid fa-cloud-arrow-up text-brand-saffron"></i>
+            <span>Upload Event Photos</span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mb-3">Compressed automatically for fast upload on 4G/5G mobile networks.</p>
+
+          <form id="photoUploadForm" onsubmit="handlePhotoSubmit(event)" class="space-y-3 text-xs">
+            <!-- Multiple image file picker -->
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Select Photos from Phone *</label>
+              <div class="border-2 border-dashed border-slate-700 hover:border-brand-saffron rounded-xl p-4 text-center cursor-pointer bg-slate-950/60 relative">
+                <input type="file" id="photoFilesInput" multiple accept="image/*" onchange="previewSelectedPhotos(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                <div class="flex flex-col items-center justify-center pointer-events-none">
+                  <i class="fa-solid fa-images text-2xl text-brand-saffron mb-1"></i>
+                  <span class="font-medium text-slate-300">Tap to choose from Gallery / Camera</span>
+                  <span class="text-[10px] text-slate-500 mt-0.5">Supports multi-photo upload & automatic client compression</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload compression progress preview bar -->
+            <div id="uploadProgressBarContainer" class="hidden">
+              <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                <span id="uploadProgressText">Optimizing images...</span>
+                <span id="uploadProgressPercent">0%</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="uploadProgressBar" class="bg-brand-saffron h-2 w-0 transition-all duration-300"></div>
+              </div>
+            </div>
+
+            <!-- Image preview thumbnails carousel -->
+            <div id="selectedPhotosPreview" class="flex gap-2 overflow-x-auto py-1 scrollbar-none hidden"></div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Event / Album Name *</label>
+                <input type="text" id="photoAlbum" required placeholder="e.g. Kisan Samman Rally" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Location *</label>
+                <input type="text" id="photoLocation" required placeholder="e.g. Rampur Ground" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Caption / Summary</label>
+              <textarea id="photoCaption" rows="2" placeholder="Brief note on what happened at the event..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="photoSaveDraft" class="rounded bg-slate-950 text-brand-saffron focus:ring-0" />
+                <span class="text-slate-400 text-[11px]">Save as Draft</span>
+              </label>
+
+              <button type="submit" id="btnPublishPhotos" class="bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold px-4 py-2 rounded-lg transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Publish to Live Site</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Existing Photos in Database -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Live Photo Entries (<span id="adminPhotosCount">0</span>)</h4>
+          <div id="adminPhotosList" class="space-y-2 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: News & Press Statements -->
+      <div id="adminTab-news" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-newspaper text-amber-400"></i>
+            <span>Publish News / Press Release</span>
+          </h3>
+
+          <form id="newsUploadForm" onsubmit="handleNewsSubmit(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1">Headline / Title *</label>
+              <input type="text" id="newsTitle" required placeholder="e.g. ₹50 Crore Highway Project Sanctioned" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Category *</label>
+                <select id="newsCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs">
+                  <option value="Development">Development</option>
+                  <option value="Press Release">Press Release</option>
+                  <option value="Constituency Work">Constituency Work</option>
+                  <option value="Youth & Employment">Youth & Employment</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Cover Image URL / Photo</label>
+                <input type="text" id="newsImageUrl" placeholder="https://... or sample" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Full Article / Press Content *</label>
+              <textarea id="newsContent" rows="4" required placeholder="Write the complete statement or news release..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="newsSaveDraft" class="rounded bg-slate-950 text-brand-saffron" />
+                <span class="text-slate-400 text-[11px]">Draft Only</span>
+              </label>
+
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="previewNewsDraft()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg">Preview</button>
+                <button type="submit" class="bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold px-4 py-2 rounded-lg shadow">Publish</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Published Articles (<span id="adminNewsCount">0</span>)</h4>
+          <div id="adminNewsList" class="space-y-2 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Events & Jan Sabha -->
+      <div id="adminTab-events" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+            <span>Schedule New Event / Jan Sabha</span>
+          </h3>
+
+          <form id="eventUploadForm" onsubmit="handleEventSubmit(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1">Event Name / Meeting *</label>
+              <input type="text" id="eventTitle" required placeholder="e.g. Ward 9 Public Grievance Chaupal" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Date *</label>
+                <input type="date" id="eventDate" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Time *</label>
+                <input type="text" id="eventTime" required placeholder="10:30 AM" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Venue / Village *</label>
+                <input type="text" id="eventVenue" required placeholder="Panchayat Bhawan" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Category</label>
+                <select id="eventCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs">
+                  <option value="Jan Sabha">Jan Sabha</option>
+                  <option value="Inauguration">Inauguration</option>
+                  <option value="Press Conference">Press Conference</option>
+                  <option value="Youth Dialogue">Youth Dialogue</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Description & Expected Attendees</label>
+              <textarea id="eventDesc" rows="2" placeholder="Agenda of the meeting or rally..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-brand-saffron focus:outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-calendar-plus"></i>
+              <span>Publish Event to Public Portal</span>
+            </button>
+          </form>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Live Events (<span id="adminEventsCount">0</span>)</h4>
+          <div id="adminEventsList" class="space-y-2 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Videos & Speeches -->
+      <div id="adminTab-videos" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-video text-rose-400"></i>
+            <span>Add Speech / YouTube Video</span>
+          </h3>
+
+          <form id="videoUploadForm" onsubmit="handleVideoSubmit(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1">Speech Title *</label>
+              <input type="text" id="vidTitle" required placeholder="e.g. Speech in Parliament on Youth Employment" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">YouTube Video URL or ID *</label>
+              <input type="text" id="vidUrl" required placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Category</label>
+                <select id="vidCategory" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs">
+                  <option value="Parliament">Parliament Debate</option>
+                  <option value="Public Rally">Public Rally</option>
+                  <option value="Media Interview">Media Interview</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Date</label>
+                <input type="date" id="vidDate" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold py-2.5 rounded-lg shadow">
+              Publish Video to Live Portal
+            </button>
+          </form>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Live Videos (<span id="adminVideosCount">0</span>)</h4>
+          <div id="adminVideosList" class="space-y-2 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Politician Profile & Vision Editor (No-Code CMS) -->
+      <div id="adminTab-profile" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-user-gear text-brand-saffron"></i>
+            <span>No-Code Profile Management</span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mb-3">Changes here immediately reflect on the public website without coding or redeployment.</p>
+
+          <form id="profileUpdateForm" onsubmit="handleProfileUpdate(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1">Leader Full Name</label>
+              <input type="text" id="profName" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Designation</label>
+                <input type="text" id="profDesignation" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Constituency</label>
+                <input type="text" id="profConstituency" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Leader Photo URL</label>
+              <input type="text" id="profPhotoUrl" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Campaign Motto</label>
+              <input type="text" id="profMotto" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1">Biography / About</label>
+              <textarea id="profBio" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs"></textarea>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-slate-300 mb-1">Twitter / X</label>
+                <input type="text" id="profTwitter" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Facebook</label>
+                <input type="text" id="profFacebook" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Instagram</label>
+                <input type="text" id="profInstagram" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-saffron hover:bg-brand-saffronDark text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Save & Update Public Website</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab 7: Citizen Grievances & Messages Inbox -->
+      <div id="adminTab-messages" class="p-4 flex-grow space-y-4 overflow-y-auto hidden">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-inbox text-sky-400"></i>
+            <span>Citizen Grievances (<span id="adminMessagesCount">0</span>)</span>
+          </h3>
+          <span class="text-[10px] text-slate-400">Direct from field</span>
+        </div>
+
+        <div id="adminMessagesList" class="space-y-2 text-xs">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <!-- Mobile Native-Style Bottom Navigation for Admin -->
+      <div class="bg-slate-900 border-t border-slate-800 p-2 grid grid-cols-5 text-center text-[10px] text-slate-400">
+        <button onclick="switchAdminTab('overview')" class="flex flex-col items-center gap-1 py-1 hover:text-brand-saffron">
+          <i class="fa-solid fa-house text-sm"></i>
+          <span>Home</span>
+        </button>
+        <button onclick="switchAdminTab('profile')" class="flex flex-col items-center gap-1 py-1 hover:text-brand-saffron">
+          <i class="fa-solid fa-user-pen text-sm"></i>
+          <span>Profile</span>
+        </button>
+        <button onclick="switchAdminTab('livechat')" class="flex flex-col items-center gap-1 py-1 hover:text-brand-saffron relative">
+          <span id="liveTabIndicator" class="absolute -top-1 right-3 w-2 h-2 rounded-full bg-red-500 animate-pulse hidden"></span>
+          <i class="fa-solid fa-tower-broadcast text-sm"></i>
+          <span>Live Desk</span>
+        </button>
+        <button onclick="switchAdminTab('photos')" class="flex flex-col items-center gap-1 py-1 hover:text-brand-saffron">
+          <i class="fa-solid fa-camera text-sm"></i>
+          <span>Photos</span>
+        </button>
+        <button onclick="switchAdminTab('messages')" class="flex flex-col items-center gap-1 py-1 hover:text-brand-saffron relative">
+          <span id="unreadBadge" class="absolute -top-1 right-3 w-2 h-2 rounded-full bg-brand-saffron hidden"></span>
+          <i class="fa-solid fa-envelope text-sm"></i>
+          <span>Inbox</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Application state store
+    window.appState = {
+      role: 'SUPER_ADMIN', // 'SUPER_ADMIN' | 'CONTENT_ADMIN' | 'EDITOR'
+      currentTab: 'overview',
+      viewMode: 'public', // 'public' | 'admin'
+      isFirebaseActive: false,
+      userId: 'admin-' + Math.random().toString(36).substring(2, 9),
+      selectedImagesForUpload: [],
+      // Default Initial Content Store for Fusram Sarpanch - Thala Village
+      profile: {
+        name: "Fusram Sarpanch (भाई फुराराम)",
+        hindiName: "भाई फुराराम सरपंच ❤️",
+        designation: "Sarpanch & Head of Village",
+        constituency: "Gram Panchayat Thala",
+        motto: "ग्राम सेवा ही ईश्वर सेवा • गाँव का विकास, सबका विश्वास",
+        bio: "Dedicated public servant and village head of Gram Panchayat Thala. Working 24x7 for rural infrastructure, clean drinking water, farmer empowerment, and modern school facilities across Thala village.",
+        photoUrl: "", // Defaults to custom portrait SVG, accepts uploaded photo via Mobile CMS
+        instagram: "https://instagram.com",
+        facebook: "https://facebook.com",
+        youtube: "https://youtube.com",
+        twitter: "https://twitter.com",
+        whatsapp: "+919876543210"
+      },
+      // Live Stream announcement feature
+      liveBroadcast: {
+        isLive: false,
+        title: "भाई फुराराम सरपंच ग्राम सभा से सीधा लाइव प्रसारण",
+        url: "https://youtube.com",
+        startedAt: null
+      },
+      // Live Citizen Chat Feed
+      chatMessages: [
+        {
+          id: "msg-1",
+          sender: "citizen",
+          senderName: "सुरेश पटेल (थाला)",
+          text: "सरपंच साहब नमस्कार, वार्ड नं 3 में सोलर लाइट लगवाने की अर्जी दी थी, कब तक काम शुरू होगा?",
+          time: "02:15 PM"
+        },
+        {
+          id: "msg-2",
+          sender: "sarpanch",
+          senderName: "भाई फुराराम सरपंच (कार्यालय)",
+          text: "नमस्ते सुरेश जी! वार्ड नं 3 की सोलर लाइट का टेंडर पास हो गया है, आगामी सोमवार से पोल लगाने का कार्य शुरू हो जाएगा।",
+          time: "02:18 PM"
+        }
+      ],
+      photos: [
+        {
+          id: "p1",
+          album: "Thala Village Road Inauguration",
+          location: "Main Street, Thala",
+          date: "2026-09-08",
+          caption: "Dedication of the new paved concrete street and drainage line connecting Thala village center.",
+          url: "https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?auto=format&fit=crop&w=800&q=80",
+          status: "published",
+          createdAt: Date.now() - 30000000
+        },
+        {
+          id: "p2",
+          album: "Kisan Choupal & Seed Distribution",
+          location: "Thala Panchayat Bhavan",
+          date: "2026-09-09",
+          caption: "Interaction with local farmers regarding micro-irrigation schemes and subsidized organic seeds.",
+          url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+          status: "published",
+          createdAt: Date.now() - 20000000
+        },
+        {
+          id: "p3",
+          album: "Government Primary School Inspection",
+          location: "Govt School, Thala",
+          date: "2026-09-10",
+          caption: "Sarpanch Fusram inspecting midday meals, smart classroom facilities, and drinking water filters.",
+          url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
+          status: "published",
+          createdAt: Date.now() - 10000000
+        }
+      ],
+      news: [
+        {
+          id: "n1",
+          title: "₹1.2 Crore Drinking Water & Pipeline Mission Sanctioned for Thala Village",
+          category: "Development",
+          date: "2026-09-09",
+          content: "Under the leadership of Sarpanch Fusram, the Gram Panchayat has secured approval for a dedicated underground water pipeline project ensuring tap water to every household in Thala.",
+          imageUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=800&q=80",
+          status: "published",
+          createdAt: Date.now() - 25000000
+        },
+        {
+          id: "n2",
+          title: "Direct Grievance Chaupal: 42 Village Issues Resolved on Spot",
+          category: "Press Release",
+          date: "2026-09-07",
+          content: "Bhai Furaram Sarpanch chaired an open chaupal at Thala Panchayat Hall, addressing electricity transformer replacements, ration card verifications, and street lighting complaints.",
+          imageUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80",
+          status: "published",
+          createdAt: Date.now() - 15000000
+        }
+      ],
+      events: [
+        {
+          id: "e1",
+          title: "Thala Gram Sabha & Vikas Baithak",
+          date: "2026-09-14",
+          time: "10:00 AM",
+          venue: "Thala Panchayat Bhavan Courtyard",
+          category: "Jan Sabha",
+          description: "General village assembly to approve upcoming financial year welfare and village infrastructure budgets.",
+          status: "published",
+          createdAt: Date.now() - 8000000
+        },
+        {
+          id: "e2",
+          title: "Free Rural Health & Eye Care Camp",
+          date: "2026-09-18",
+          time: "09:00 AM",
+          venue: "Community Center, Thala Village",
+          category: "Inauguration",
+          description: "Free medical checkups, free medicines, and eye testing arranged for all senior citizens and children of Thala.",
+          status: "published",
+          createdAt: Date.now() - 5000000
+        }
+      ],
+      videos: [
+        {
+          id: "v1",
+          title: "Sarpanch Fusram Addressing Village Farmers on Clean Water Supply in Thala",
+          url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          category: "Public Rally",
+          date: "2026-09-05",
+          status: "published"
+        }
+      ],
+      achievements: [
+        {
+          id: "a1",
+          title: "100% Paved Village Streets",
+          metric: "All Wards Covered",
+          desc: "Constructed durable CC roads and covered stormwater drainage lines throughout Thala village.",
+          icon: "fa-solid fa-road"
+        },
+        {
+          id: "a2",
+          title: "Clean Tap Water to Every Home",
+          metric: "Har Ghar Jal",
+          desc: "Overhead reservoir and solar-powered motor water supply system deployed.",
+          icon: "fa-solid fa-faucet-drip"
+        },
+        {
+          id: "a3",
+          title: "Solar Street Lighting",
+          metric: "85+ Poles Installed",
+          desc: "Illuminating every major street, village chowk, and temple pathway at zero electricity cost.",
+          icon: "fa-solid fa-solar-panel"
+        }
+      ],
+      grievances: [
+        {
+          id: "g1",
+          name: "Rameshwar Patel",
+          phone: "9876543210",
+          location: "Thala Ward 2",
+          category: "Drinking Water / Electricity",
+          message: "Water line pressure low near the primary school lane. Kindly inspect.",
+          date: "2026-09-11 11:30 AM",
+          read: false
+        }
+      ],
+      activityLog: []
+    };
+
+    let db = null;
+    let auth = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'janseva-campaign-cms';
+
+    try {
+      if (typeof __firebase_config !== 'undefined') {
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        // Authenticate first per mandatory rule
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        window.appState.isFirebaseActive = true;
+        document.getElementById('syncIndicator').innerHTML = '<i class="fa-solid fa-cloud text-emerald-400 mr-1"></i> Live Cloud DB Active';
+
+        // Setup strictly compliant Firestore real-time listeners:
+        // RULE 1: /artifacts/{appId}/public/data/{collectionName}
+        // RULE 2: Simple queries without orderBy or compound constraints
+        const setupCollectionSync = (colName, stateKey) => {
+          const colRef = collection(db, 'artifacts', appId, 'public', 'data', colName);
+          onSnapshot(colRef, (snapshot) => {
+            if (!snapshot.empty) {
+              const items = [];
+              snapshot.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
+              // Sort locally in memory per Rule 2
+              items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+              window.appState[stateKey] = items;
+              renderAll();
+            }
+          }, (err) => {
+            console.warn(`Firestore sync for ${colName} note:`, err.message);
+          });
+        };
+
+        setupCollectionSync('cms_photos', 'photos');
+        setupCollectionSync('cms_news', 'news');
+        setupCollectionSync('cms_events', 'events');
+        setupCollectionSync('cms_videos', 'videos');
+        setupCollectionSync('cms_grievances', 'grievances');
+        setupCollectionSync('cms_chat', 'chatMessages');
+
+        // Profile doc listener
+        const profileDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'cms_profile', 'main_profile');
+        onSnapshot(profileDocRef, (snap) => {
+          if (snap.exists()) {
+            window.appState.profile = { ...window.appState.profile, ...snap.data() };
+            renderAll();
+          }
+        }, (err) => console.warn(err));
+
+        // Live stream doc listener
+        const liveDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'cms_live', 'current_broadcast');
+        onSnapshot(liveDocRef, (snap) => {
+          if (snap.exists()) {
+            window.appState.liveBroadcast = snap.data();
+            renderAll();
+          }
+        }, (err) => console.warn(err));
+      }
+    } catch (e) {
+      console.log('Running in high-speed responsive fallback mode:', e);
+    }
+
+    // Client-side image compression using HTML5 Canvas
+    // Optimizes high-res phone camera photos (5MB - 12MB) down to ultra-fast 150KB - 300KB
+    window.compressImageFile = async function(file, maxWidth = 1280, quality = 0.75) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compress to JPEG DataURL
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve({
+              dataUrl: compressedDataUrl,
+              origSize: (file.size / 1024).toFixed(0) + ' KB',
+              compressedSize: (compressedDataUrl.length / 1024).toFixed(0) + ' KB',
+              fileName: file.name
+            });
+          };
+          img.onerror = () => resolve({ dataUrl: event.target.result, fileName: file.name });
+        };
+      });
+    };
+
+    // Generic Save / Publish to Database
+    window.persistData = async function(collectionName, docId, data) {
+      if (window.appState.isFirebaseActive && db && auth.currentUser) {
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId);
+          await setDoc(docRef, data, { merge: true });
+        } catch (err) {
+          console.error('Save to Firestore failed:', err);
+        }
+      }
+      // Keep local state in sync immediately
+      showToast('Action saved & published to live site successfully!', 'success');
+    };
+
+    window.deleteFromDB = async function(collectionName, docId, stateKey) {
+      if (window.appState.isFirebaseActive && db && auth.currentUser) {
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId);
+          await deleteDoc(docRef);
+        } catch (err) {
+          console.error('Delete failed:', err);
+        }
+      }
+      // Local state removal
+      window.appState[stateKey] = window.appState[stateKey].filter(item => item.id !== docId);
+      logActivity(`Deleted item from ${stateKey}`);
+      renderAll();
+      showToast('Item permanently deleted', 'info');
+    };
+
+    function logActivity(message) {
+      window.appState.activityLog.unshift({
+        msg: message,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        user: window.appState.role
+      });
+      if (window.appState.activityLog.length > 8) window.appState.activityLog.pop();
+    }
+
+    // Toast Notification helper
+    window.showToast = function(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-slate-900 text-white border border-slate-700'
+      };
+
+      toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
+      
+      let icon = '<i class="fa-solid fa-circle-check"></i>';
+      if (type === 'error') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+      if (type === 'info') icon = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+
+      toast.innerHTML = `${icon} <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    };
+
+    // Safe Custom Modal (Replaces alert/confirm)
+    window.openModal = function(title, htmlContent, actionBtnText, onAction) {
+      const modal = document.getElementById('appModal');
+      const content = document.getElementById('appModalContent');
+
+      content.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+          <h3 class="text-base font-bold text-slate-900">${title}</h3>
+          <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="text-xs text-slate-600 space-y-3 mb-6">
+          ${htmlContent}
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button onclick="closeModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+            Cancel
+          </button>
+          ${actionBtnText ? `
+            <button id="modalActionBtn" class="px-4 py-2 text-xs font-bold text-white bg-brand-saffron hover:bg-brand-saffronDark rounded-lg shadow">
+              ${actionBtnText}
+            </button>
+          ` : ''}
+        </div>
+      `;
+
+      if (actionBtnText && onAction) {
+        document.getElementById('modalActionBtn').onclick = () => {
+          onAction();
+          closeModal();
+        };
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closeModal = function() {
+      document.getElementById('appModal').classList.add('hidden');
+    };
+
+    // Handle Profile Photo Upload directly from phone camera/gallery
+    window.handleProfilePhotoUpload = async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showToast('Processing & optimizing leader portrait photo...', 'info');
+      const compressed = await window.compressImageFile(file, 800, 0.85);
+
+      window.appState.profile.photoUrl = compressed.dataUrl;
+      const previewImg = document.getElementById('adminProfilePreviewImg');
+      const placeholderIcon = document.getElementById('adminProfilePlaceholderIcon');
+
+      if (previewImg && placeholderIcon) {
+        previewImg.src = compressed.dataUrl;
+        previewImg.classList.remove('hidden');
+        placeholderIcon.classList.add('hidden');
+      }
+
+      document.getElementById('profPhotoUrl').value = compressed.dataUrl;
+      showToast('Profile photo ready! Click "Save Profile" below to sync.', 'success');
+    };
+
+    window.updateProfilePreviewFromUrl = function(url) {
+      const previewImg = document.getElementById('adminProfilePreviewImg');
+      const placeholderIcon = document.getElementById('adminProfilePlaceholderIcon');
+      if (url && url.trim() !== '') {
+        previewImg.src = url;
+        previewImg.classList.remove('hidden');
+        placeholderIcon.classList.add('hidden');
+      } else {
+        previewImg.classList.add('hidden');
+        placeholderIcon.classList.remove('hidden');
+      }
+    };
+
+    // Handle image file selection & preview on mobile
+    window.previewSelectedPhotos = async function(event) {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      const previewContainer = document.getElementById('selectedPhotosPreview');
+      const progressContainer = document.getElementById('uploadProgressBarContainer');
+      const progressBar = document.getElementById('uploadProgressBar');
+      const progressText = document.getElementById('uploadProgressText');
+      const progressPercent = document.getElementById('uploadProgressPercent');
+
+      previewContainer.innerHTML = '';
+      previewContainer.classList.remove('hidden');
+      progressContainer.classList.remove('hidden');
+      window.appState.selectedImagesForUpload = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const percent = Math.round(((i + 1) / files.length) * 100);
+        progressPercent.innerText = `${percent}%`;
+        progressBar.style.width = `${percent}%`;
+        progressText.innerText = `Compressing ${file.name} for mobile upload...`;
+
+        const compressed = await window.compressImageFile(file);
+        window.appState.selectedImagesForUpload.push(compressed.dataUrl);
+
+        // Add visual thumbnail
+        const thumb = document.createElement('div');
+        thumb.className = 'relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border border-brand-saffron shadow';
+        thumb.innerHTML = `
+          <img src="${compressed.dataUrl}" class="w-full h-full object-cover"/>
+          <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] text-center text-amber-300">${compressed.compressedSize}</span>
+        `;
+        previewContainer.appendChild(thumb);
+      }
+
+      setTimeout(() => {
+        progressContainer.classList.add('hidden');
+        showToast(`${files.length} photos ready with 4G/5G mobile optimization`, 'success');
+      }, 400);
+    };
+
+    // Submit Photos from Mobile Admin
+    window.handlePhotoSubmit = function(e) {
+      e.preventDefault();
+      // Check Role Permissions
+      if (window.appState.role === 'EDITOR') {
+        showToast('Editor role: Submitting for Super Admin review...', 'info');
+      }
+
+      const album = document.getElementById('photoAlbum').value;
+      const location = document.getElementById('photoLocation').value;
+      const caption = document.getElementById('photoCaption').value;
+      const isDraft = document.getElementById('photoSaveDraft').checked;
+
+      // Fallback sample image if none picked from phone camera
+      const uploadedImgs = window.appState.selectedImagesForUpload.length > 0 
+        ? window.appState.selectedImagesForUpload 
+        : ["https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80"];
+
+      uploadedImgs.forEach((imgUrl, index) => {
+        const newPhoto = {
+          id: 'photo-' + Date.now() + '-' + index,
+          album: album,
+          location: location,
+          date: new Date().toISOString().split('T')[0],
+          caption: caption,
+          url: imgUrl,
+          status: isDraft ? 'draft' : 'published',
+          createdAt: Date.now()
+        };
+
+        window.appState.photos.unshift(newPhoto);
+        window.persistData('cms_photos', newPhoto.id, newPhoto);
+      });
+
+      logActivity(`Uploaded ${uploadedImgs.length} photo(s) to album: ${album}`);
+      
+      // Reset form
+      document.getElementById('photoUploadForm').reset();
+      document.getElementById('selectedPhotosPreview').innerHTML = '';
+      document.getElementById('selectedPhotosPreview').classList.add('hidden');
+      window.appState.selectedImagesForUpload = [];
+
+      renderAll();
+      showToast(isDraft ? 'Saved to drafts' : 'Photos live on public website!', 'success');
+    };
+
+    // Submit News Article
+    window.handleNewsSubmit = function(e) {
+      e.preventDefault();
+      const title = document.getElementById('newsTitle').value;
+      const category = document.getElementById('newsCategory').value;
+      let imageUrl = document.getElementById('newsImageUrl').value;
+      const content = document.getElementById('newsContent').value;
+      const isDraft = document.getElementById('newsSaveDraft').checked;
+
+      if (!imageUrl) {
+        imageUrl = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80";
+      }
+
+      const newNews = {
+        id: 'news-' + Date.now(),
+        title,
+        category,
+        content,
+        imageUrl,
+        date: new Date().toISOString().split('T')[0],
+        status: isDraft ? 'draft' : 'published',
+        createdAt: Date.now()
+      };
+
+      window.appState.news.unshift(newNews);
+      window.persistData('cms_news', newNews.id, newNews);
+      logActivity(`Published news: ${title.substring(0, 25)}...`);
+      document.getElementById('newsUploadForm').reset();
+      renderAll();
+      showToast(isDraft ? 'Draft saved' : 'News published to live site!', 'success');
+    };
+
+    // Preview News Draft in Safe Modal
+    window.previewNewsDraft = function() {
+      const title = document.getElementById('newsTitle').value || "Sample Headline";
+      const content = document.getElementById('newsContent').value || "Sample content will appear here...";
+      const category = document.getElementById('newsCategory').value;
+
+      window.openModal("Draft Article Preview", `
+        <span class="px-2 py-0.5 rounded bg-brand-saffron text-white text-[10px] uppercase font-bold">${category}</span>
+        <h4 class="text-sm font-bold text-slate-900 mt-2">${title}</h4>
+        <p class="text-slate-600 mt-2 leading-relaxed">${content}</p>
+        <div class="mt-3 p-2 bg-amber-50 rounded border border-amber-200 text-amber-800 text-[11px]">
+          <i class="fa-solid fa-eye mr-1"></i> Preview mode: Click Publish when ready.
+        </div>
+      `, null, null);
+    };
+
+    // Submit Event
+    window.handleEventSubmit = function(e) {
+      e.preventDefault();
+      const newEvent = {
+        id: 'event-' + Date.now(),
+        title: document.getElementById('eventTitle').value,
+        date: document.getElementById('eventDate').value,
+        time: document.getElementById('eventTime').value,
+        venue: document.getElementById('eventVenue').value,
+        category: document.getElementById('eventCategory').value,
+        description: document.getElementById('eventDesc').value,
+        status: 'published',
+        createdAt: Date.now()
+      };
+
+      window.appState.events.unshift(newEvent);
+      window.persistData('cms_events', newEvent.id, newEvent);
+      logActivity(`Scheduled event: ${newEvent.title}`);
+      document.getElementById('eventUploadForm').reset();
+      renderAll();
+      showToast('Event published to live calendar!', 'success');
+    };
+
+    // Submit Video
+    window.handleVideoSubmit = function(e) {
+      e.preventDefault();
+      const newVid = {
+        id: 'vid-' + Date.now(),
+        title: document.getElementById('vidTitle').value,
+        url: document.getElementById('vidUrl').value,
+        category: document.getElementById('vidCategory').value,
+        date: document.getElementById('vidDate').value || new Date().toISOString().split('T')[0],
+        status: 'published',
+        createdAt: Date.now()
+      };
+
+      window.appState.videos.unshift(newVid);
+      window.persistData('cms_videos', newVid.id, newVid);
+      logActivity(`Added video speech: ${newVid.title}`);
+      document.getElementById('videoUploadForm').reset();
+      renderAll();
+      showToast('Video added to public media page!', 'success');
+    };
+
+    // Update Politician Profile (Complete Mobile No-Code CMS)
+    window.handleProfileUpdate = function(e) {
+      e.preventDefault();
+      const updated = {
+        name: document.getElementById('profName').value,
+        hindiName: document.getElementById('profHindiName').value || "भाई फुराराम सरपंच ❤️",
+        designation: document.getElementById('profDesignation').value,
+        constituency: document.getElementById('profConstituency').value,
+        motto: document.getElementById('profMotto').value,
+        bio: document.getElementById('profBio').value,
+        photoUrl: document.getElementById('profPhotoUrl').value || window.appState.profile.photoUrl,
+        instagram: document.getElementById('profInstagram').value,
+        facebook: document.getElementById('profFacebook').value,
+        youtube: document.getElementById('profYoutube').value,
+        twitter: document.getElementById('profTwitter').value,
+        whatsapp: document.getElementById('profWhatsapp').value
+      };
+
+      window.appState.profile = { ...window.appState.profile, ...updated };
+      window.persistData('cms_profile', 'main_profile', updated);
+      logActivity('Updated official leader profile & social handles');
+      renderAll();
+      showToast('Politician profile updated across entire platform!', 'success');
+    };
+
+    // Live Stream Broadcast Toggle (Go Live on YouTube / Facebook)
+    window.handleLiveStreamToggle = function(e) {
+      e.preventDefault();
+      const current = window.appState.liveBroadcast.isLive;
+      const title = document.getElementById('adminLiveTitle').value || "भाई फुराराम सरपंच ग्राम सभा से लाइव संबोधन";
+      const url = document.getElementById('adminLiveUrl').value || "https://youtube.com";
+
+      const updatedLive = {
+        isLive: !current,
+        title: title,
+        url: url,
+        startedAt: !current ? Date.now() : null
+      };
+
+      window.appState.liveBroadcast = updatedLive;
+      window.persistData('cms_live', 'current_broadcast', updatedLive);
+      logActivity(updatedLive.isLive ? 'Started Live Broadcast on Website' : 'Ended Live Broadcast');
+      renderAll();
+      showToast(updatedLive.isLive ? '🔴 Sarpanch is now LIVE on public website!' : 'Live broadcast ended', updatedLive.isLive ? 'error' : 'info');
+    };
+
+    // Citizen Floating Live Chat Widget Toggle
+    window.toggleLiveChatWidget = function() {
+      const chatWindow = document.getElementById('liveChatWindow');
+      chatWindow.classList.toggle('hidden');
+      if (!chatWindow.classList.contains('hidden')) {
+        document.getElementById('chatUnreadDot').classList.add('hidden');
+        renderChatMessages();
+        const input = document.getElementById('liveChatUserInput');
+        if (input) input.focus();
+      }
+    };
+
+    // Send Live Chat Message (Public User)
+    window.sendLiveChatMessage = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('liveChatUserInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newMsg = {
+        id: 'msg-' + Date.now(),
+        sender: 'citizen',
+        senderName: 'Citizen (नागरिक)',
+        text: text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: Date.now()
+      };
+
+      window.appState.chatMessages.push(newMsg);
+      window.persistData('cms_chat', newMsg.id, newMsg);
+      input.value = '';
+      renderChatMessages();
+      renderAdminLiveChat();
+
+      // Show auto acknowledgment if first time
+      setTimeout(() => {
+        if (window.appState.chatMessages.length <= 4) {
+          const autoReply = {
+            id: 'msg-reply-' + Date.now(),
+            sender: 'sarpanch',
+            senderName: 'Fusram Sarpanch Desk',
+            text: 'धन्यवाद! आपका संदेश सरपंच भाई फुराराम जी के कार्यालय में पहुंच गया है।',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            createdAt: Date.now()
+          };
+          window.appState.chatMessages.push(autoReply);
+          renderChatMessages();
+          renderAdminLiveChat();
+        }
+      }, 1200);
+    };
+
+    // Admin replies in Live Chat Desk
+    window.adminSendReply = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('adminReplyInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newReply = {
+        id: 'msg-' + Date.now(),
+        sender: 'sarpanch',
+        senderName: `${window.appState.profile.name} (Official)`,
+        text: text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: Date.now()
+      };
+
+      window.appState.chatMessages.push(newReply);
+      window.persistData('cms_chat', newReply.id, newReply);
+      input.value = '';
+      renderChatMessages();
+      renderAdminLiveChat();
+      showToast('Live reply sent to citizen chat!', 'success');
+    };
+
+    function renderChatMessages() {
+      const area = document.getElementById('liveChatMessagesArea');
+      if (!area) return;
+
+      area.innerHTML = window.appState.chatMessages.map(m => {
+        const isSarpanch = m.sender === 'sarpanch';
+        return `
+          <div class="flex flex-col ${isSarpanch ? 'items-start' : 'items-end'}">
+            <span class="text-[9px] text-slate-400 mb-0.5">${m.senderName} • ${m.time}</span>
+            <div class="${isSarpanch ? 'bg-amber-100 text-slate-900 border border-amber-200' : 'bg-brand-saffron text-white'} p-2.5 rounded-2xl max-w-[85%] leading-relaxed shadow-sm">
+              ${m.text}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function renderAdminLiveChat() {
+      const adminList = document.getElementById('adminLiveChatList');
+      const countEl = document.getElementById('adminLiveChatCount');
+      const statChats = document.getElementById('statChats');
+      if (countEl) countEl.innerText = window.appState.chatMessages.length;
+      if (statChats) statChats.innerText = window.appState.chatMessages.length;
+
+      if (!adminList) return;
+      if (window.appState.chatMessages.length === 0) {
+        adminList.innerHTML = `<p class="text-slate-500 text-center py-4 text-xs">No active live chats.</p>`;
+        return;
+      }
+
+      adminList.innerHTML = window.appState.chatMessages.map(m => `
+        <div class="p-2.5 rounded-xl border ${m.sender === 'sarpanch' ? 'bg-amber-950/30 border-amber-500/30' : 'bg-slate-950 border-slate-800'}">
+          <div class="flex items-center justify-between text-[10px] mb-1">
+            <span class="font-bold ${m.sender === 'sarpanch' ? 'text-amber-400' : 'text-sky-400'}">${m.senderName}</span>
+            <span class="text-slate-500">${m.time}</span>
+          </div>
+          <p class="text-xs text-slate-200">${m.text}</p>
+        </div>
+      `).join('');
+
+      adminList.scrollTop = adminList.scrollHeight;
+    }
+
+    window.clearChatDemo = function() {
+      window.appState.chatMessages = [];
+      renderChatMessages();
+      renderAdminLiveChat();
+      showToast('Live chat history cleared', 'info');
+    };
+
+    // Citizen Grievance Submission from Public Portal
+    window.submitGrievance = function(e) {
+      e.preventDefault();
+      const newGrievance = {
+        id: 'g-' + Date.now(),
+        name: document.getElementById('gName').value,
+        phone: document.getElementById('gPhone').value,
+        location: document.getElementById('gLocation').value,
+        category: document.getElementById('gCategory').value,
+        message: document.getElementById('gMessage').value,
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        read: false
+      };
+
+      window.appState.grievances.unshift(newGrievance);
+      window.persistData('cms_grievances', newGrievance.id, newGrievance);
+      document.getElementById('grievanceForm').reset();
+      renderAll();
+
+      window.openModal("Grievance Registered Successfully", `
+        <p>Dear Citizen, your feedback has been received and transferred to the constituency mobile administration desk.</p>
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2">
+          <strong>Tracking ID:</strong> #${newGrievance.id}<br/>
+          <strong>Assigned Office:</strong> MP Public Cell, North Constituency
+        </div>
+      `, null, null);
+    };
+
+    // Toggle Status (Publish / Unpublish)
+    window.togglePublishStatus = function(stateKey, id) {
+      const item = window.appState[stateKey].find(x => x.id === id);
+      if (item) {
+        item.status = item.status === 'published' ? 'draft' : 'published';
+        window.persistData(`cms_${stateKey}`, id, item);
+        logActivity(`Changed status of ${id} to ${item.status}`);
+        renderAll();
+        showToast(`Item marked as ${item.status}`, 'info');
+      }
+    };
+
+    // Delete item with custom confirmation modal
+    window.confirmDelete = function(stateKey, id, label) {
+      window.openModal("Confirm Permanent Delete", `
+        Are you sure you want to delete <strong>"${label}"</strong>? This will remove it from the mobile database and the live public portal immediately.
+      `, "Yes, Delete", () => {
+        window.deleteFromDB(`cms_${stateKey}`, id, stateKey);
+      });
+    };
+
+    // Role-based permission handling
+    window.changeRole = function(newRole) {
+      window.appState.role = newRole;
+      document.getElementById('currentRoleBadge').innerText = newRole.replace('_', ' ');
+      
+      const badgeColors = {
+        SUPER_ADMIN: 'bg-emerald-500/20 text-emerald-400',
+        CONTENT_ADMIN: 'bg-amber-500/20 text-amber-400',
+        EDITOR: 'bg-sky-500/20 text-sky-400'
+      };
+      document.getElementById('currentRoleBadge').className = `text-[10px] font-semibold px-2 py-0.5 rounded-full ${badgeColors[newRole]}`;
+      
+      showToast(`Switched active role to: ${newRole}`, 'info');
+      renderAll();
+    };
+
+    // Switch between Public Web View & Mobile Admin Phone CMS View
+    window.toggleViewMode = function() {
+      if (window.appState.viewMode === 'public') {
+        window.switchToAdmin();
+      } else {
+        window.switchToPublic();
+      }
+    };
+
+    window.switchToAdmin = function() {
+      window.appState.viewMode = 'admin';
+      document.getElementById('publicView').classList.add('hidden');
+      document.getElementById('adminView').classList.remove('hidden');
+      document.getElementById('viewSwitchText').innerText = "View Live Public Website";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      populateProfileInputs();
+      renderAll();
+    };
+
+    window.switchToPublic = function() {
+      window.appState.viewMode = 'public';
+      document.getElementById('adminView').classList.add('hidden');
+      document.getElementById('publicView').classList.remove('hidden');
+      document.getElementById('viewSwitchText').innerText = "Switch to Mobile Admin CMS";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderAll();
+    };
+
+    window.logoutAdmin = function() {
+      showToast('Admin logged out. Returning to public portal.', 'info');
+      switchToPublic();
+    };
+
+    // Admin Tabs Switcher
+    window.switchAdminTab = function(tabName) {
+      window.appState.currentTab = tabName;
+      document.querySelectorAll('[id^="adminTab-"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        btn.classList.remove('text-brand-saffron', 'border-b-2', 'border-brand-saffron', 'font-bold');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeTabContent = document.getElementById(`adminTab-${tabName}`);
+      const activeTabBtn = document.getElementById(`tab-${tabName}`);
+
+      if (activeTabContent) activeTabContent.classList.remove('hidden');
+      if (activeTabBtn) {
+        activeTabBtn.classList.add('text-brand-saffron', 'border-b-2', 'border-brand-saffron', 'font-bold');
+        activeTabBtn.classList.remove('text-slate-400');
+      }
+
+      if (tabName === 'profile') populateProfileInputs();
+      if (tabName === 'livechat') {
+        renderAdminLiveChat();
+        populateLiveStreamInputs();
+      }
+    };
+
+    function populateLiveStreamInputs() {
+      const live = window.appState.liveBroadcast;
+      const titleInput = document.getElementById('adminLiveTitle');
+      const urlInput = document.getElementById('adminLiveUrl');
+      const statusBadge = document.getElementById('liveStatusBadge');
+      const toggleBtnText = document.getElementById('toggleLiveStreamText');
+      const toggleBtn = document.getElementById('toggleLiveStreamBtn');
+      const liveTabIndicator = document.getElementById('liveTabIndicator');
+
+      if (titleInput) titleInput.value = live.title || '';
+      if (urlInput) urlInput.value = live.url || '';
+
+      if (live.isLive) {
+        if (statusBadge) {
+          statusBadge.innerText = '🔴 STREAMING LIVE';
+          statusBadge.className = 'text-[10px] bg-red-600 text-white px-2.5 py-0.5 rounded-full font-bold animate-pulse';
+        }
+        if (toggleBtnText) toggleBtnText.innerText = 'Stop Live Broadcast';
+        if (toggleBtn) toggleBtn.className = 'w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl border border-red-500 shadow flex items-center justify-center gap-2';
+        if (liveTabIndicator) liveTabIndicator.classList.remove('hidden');
+      } else {
+        if (statusBadge) {
+          statusBadge.innerText = 'OFFLINE';
+          statusBadge.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold';
+        }
+        if (toggleBtnText) toggleBtnText.innerText = 'Go Live & Show Banner';
+        if (toggleBtn) toggleBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl shadow flex items-center justify-center gap-2';
+        if (liveTabIndicator) liveTabIndicator.classList.add('hidden');
+      }
+    }
+
+    function populateProfileInputs() {
+      const p = window.appState.profile;
+      if (document.getElementById('profName')) document.getElementById('profName').value = p.name || '';
+      if (document.getElementById('profHindiName')) document.getElementById('profHindiName').value = p.hindiName || '';
+      if (document.getElementById('profDesignation')) document.getElementById('profDesignation').value = p.designation || '';
+      if (document.getElementById('profConstituency')) document.getElementById('profConstituency').value = p.constituency || '';
+      if (document.getElementById('profMotto')) document.getElementById('profMotto').value = p.motto || '';
+      if (document.getElementById('profBio')) document.getElementById('profBio').value = p.bio || '';
+      if (document.getElementById('profPhotoUrl')) document.getElementById('profPhotoUrl').value = p.photoUrl || '';
+      if (document.getElementById('profInstagram')) document.getElementById('profInstagram').value = p.instagram || '';
+      if (document.getElementById('profFacebook')) document.getElementById('profFacebook').value = p.facebook || '';
+      if (document.getElementById('profYoutube')) document.getElementById('profYoutube').value = p.youtube || '';
+      if (document.getElementById('profTwitter')) document.getElementById('profTwitter').value = p.twitter || '';
+      if (document.getElementById('profWhatsapp')) document.getElementById('profWhatsapp').value = p.whatsapp || '';
+
+      const previewImg = document.getElementById('adminProfilePreviewImg');
+      const placeholderIcon = document.getElementById('adminProfilePlaceholderIcon');
+      if (previewImg && placeholderIcon) {
+        if (p.photoUrl && p.photoUrl.trim() !== '') {
+          previewImg.src = p.photoUrl;
+          previewImg.classList.remove('hidden');
+          placeholderIcon.classList.add('hidden');
+        } else {
+          previewImg.classList.add('hidden');
+          placeholderIcon.classList.remove('hidden');
+        }
+      }
+    }
+
+    // Full UI Rendering Engine (Keeps Public & CMS in Complete Real-Time Sync)
+    window.renderAll = function() {
+      const state = window.appState;
+
+      // 1. Sync Profile on Public Site
+      document.getElementById('publicHeaderName').innerText = state.profile.name;
+      document.getElementById('publicHeaderDesignation').innerText = `${state.profile.designation} | ${state.profile.constituency}`;
+      document.getElementById('heroMotto').innerText = state.profile.motto;
+      document.getElementById('heroConstituency').innerText = state.profile.constituency;
+      document.getElementById('heroBio').innerText = state.profile.bio;
+      document.getElementById('heroCardName').innerText = state.profile.name;
+      document.getElementById('footerName').innerText = `${state.profile.name} Campaign Office`;
+      
+      const heroLeaderImg = document.getElementById('heroLeaderImg');
+      const heroLeaderSvg = document.getElementById('heroLeaderSvg');
+      if (state.profile.photoUrl && state.profile.photoUrl.trim() !== '') {
+        heroLeaderImg.src = state.profile.photoUrl;
+        heroLeaderImg.classList.remove('hidden');
+        heroLeaderSvg.classList.add('hidden');
+      } else {
+        heroLeaderImg.classList.add('hidden');
+        heroLeaderSvg.classList.remove('hidden');
+      }
+
+      // 2. Render Social Media Handles in Hero & Footer
+      const socialBox = document.getElementById('heroSocialContainer');
+      socialBox.innerHTML = `
+        <a href="${state.profile.instagram || 'https://instagram.com'}" target="_blank" title="Instagram" class="w-10 h-10 rounded-full bg-white border border-slate-200 hover:text-pink-600 hover:border-pink-300 flex items-center justify-center shadow-sm transition"><i class="fa-brands fa-instagram text-base"></i></a>
+        <a href="${state.profile.facebook || 'https://facebook.com'}" target="_blank" title="Facebook" class="w-10 h-10 rounded-full bg-white border border-slate-200 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center shadow-sm transition"><i class="fa-brands fa-facebook-f text-base"></i></a>
+        <a href="${state.profile.youtube || 'https://youtube.com'}" target="_blank" title="YouTube Channel" class="w-10 h-10 rounded-full bg-white border border-slate-200 hover:text-red-600 hover:border-red-300 flex items-center justify-center shadow-sm transition"><i class="fa-brands fa-youtube text-base"></i></a>
+        <a href="${state.profile.twitter || 'https://twitter.com'}" target="_blank" title="Twitter / X" class="w-10 h-10 rounded-full bg-white border border-slate-200 hover:text-brand-saffron flex items-center justify-center shadow-sm transition"><i class="fa-brands fa-x-twitter text-base"></i></a>
+        <a href="https://wa.me/${(state.profile.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" title="WhatsApp Message" class="w-10 h-10 rounded-full bg-white border border-slate-200 hover:text-emerald-600 hover:border-emerald-300 flex items-center justify-center shadow-sm transition"><i class="fa-brands fa-whatsapp text-base"></i></a>
+      `;
+
+      const footerSocial = document.getElementById('footerSocialContainer');
+      if (footerSocial) {
+        footerSocial.innerHTML = `
+          <a href="${state.profile.instagram || 'https://instagram.com'}" target="_blank" class="hover:text-pink-400 transition"><i class="fa-brands fa-instagram"></i></a>
+          <a href="${state.profile.facebook || 'https://facebook.com'}" target="_blank" class="hover:text-blue-400 transition"><i class="fa-brands fa-facebook"></i></a>
+          <a href="${state.profile.youtube || 'https://youtube.com'}" target="_blank" class="hover:text-red-400 transition"><i class="fa-brands fa-youtube"></i></a>
+          <a href="${state.profile.twitter || 'https://twitter.com'}" target="_blank" class="hover:text-white transition"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://wa.me/${(state.profile.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="hover:text-emerald-400 transition"><i class="fa-brands fa-whatsapp"></i></a>
+        `;
+      }
+
+      // WhatsApp Button in Contact section
+      const contactWhatsApp = document.getElementById('contactWhatsAppBtn');
+      if (contactWhatsApp) {
+        contactWhatsApp.href = `https://wa.me/${(state.profile.whatsapp || '919876543210').replace(/[^0-9]/g, '')}`;
+      }
+
+      // 3. Render Live Broadcast Banner
+      const liveBanner = document.getElementById('sarpanchLiveBanner');
+      const liveTitle = document.getElementById('sarpanchLiveTitle');
+      const liveBtn = document.getElementById('sarpanchLiveActionBtn');
+      if (state.liveBroadcast && state.liveBroadcast.isLive) {
+        liveBanner.classList.remove('hidden');
+        if (liveTitle) liveTitle.innerText = state.liveBroadcast.title || "भाई फुराराम सरपंच ग्राम सभा से लाइव संबोधन";
+        if (liveBtn) liveBtn.href = state.liveBroadcast.url || "https://youtube.com";
+      } else {
+        liveBanner.classList.add('hidden');
+      }
+
+      // 4. Render News Ticker from published news
+      const publishedNews = state.news.filter(n => n.status === 'published');
+      const ticker = document.getElementById('newsTicker');
+      if (publishedNews.length > 0) {
+        ticker.innerHTML = publishedNews.map(n => `
+          <span class="inline-flex items-center gap-2">
+            <i class="fa-solid fa-circle text-[6px] text-brand-saffron"></i>
+            <strong>${n.title}</strong>
+          </span>
+        `).join('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+      } else {
+        ticker.innerHTML = `<span>Office of MP: Development works in progress across all blocks.</span>`;
+      }
+
+      // 5. Render Public News Grid
+      const publicNewsContainer = document.getElementById('publicNewsContainer');
+      if (publishedNews.length === 0) {
+        publicNewsContainer.innerHTML = `<div class="col-span-3 text-center py-8 text-slate-500 text-sm">No published news items at the moment. Use Mobile Admin to publish.</div>`;
+      } else {
+        publicNewsContainer.innerHTML = publishedNews.map(item => `
+          <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col">
+            <div class="h-48 overflow-hidden bg-slate-100 relative">
+              <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=News+Photo'"/>
+              <span class="absolute top-3 left-3 bg-brand-navy/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider backdrop-blur-sm">
+                ${item.category}
+              </span>
+            </div>
+            <div class="p-5 flex flex-col flex-grow">
+              <span class="text-xs text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i> ${item.date}</span>
+              <h3 class="font-bold text-slate-900 text-base mt-2 leading-snug">${item.title}</h3>
+              <p class="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">${item.content}</p>
+              <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-brand-saffron">
+                <span>Read Full Report</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 6. Render Public Events Schedule
+      const publishedEvents = state.events.filter(e => e.status === 'published');
+      const publicEventsContainer = document.getElementById('publicEventsContainer');
+      if (publishedEvents.length === 0) {
+        publicEventsContainer.innerHTML = `<div class="col-span-3 text-center py-8 text-slate-500 text-sm">No scheduled events found. Check back soon.</div>`;
+      } else {
+        publicEventsContainer.innerHTML = publishedEvents.map(evt => `
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 right-0 w-2 h-full bg-brand-saffron"></div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-brand-saffron bg-brand-saffronLight px-2.5 py-1 rounded-md">${evt.category}</span>
+                <span class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i> ${evt.time}</span>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 leading-snug">${evt.title}</h3>
+              <p class="text-xs text-slate-600 mt-2 leading-relaxed">${evt.description || 'Public assembly and interactive session.'}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <i class="fa-solid fa-location-dot text-brand-saffron"></i>
+              <span>${evt.venue}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 7. Render Public Photos & Album Chips
+      const publishedPhotos = state.photos.filter(p => p.status === 'published');
+      const albumFilters = document.getElementById('publicAlbumFilters');
+
+      // Unique Albums
+      const uniqueAlbums = ['All', ...new Set(publishedPhotos.map(p => p.album))];
+      albumFilters.innerHTML = uniqueAlbums.map(alb => `
+        <button onclick="filterPhotosByAlbum('${alb}')" class="text-xs px-3 py-1.5 rounded-full font-medium transition ${alb === 'All' ? 'bg-brand-saffron text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+          ${alb}
+        </button>
+      `).join('');
+
+      renderPhotoGrid(publishedPhotos);
+
+      // 8. Render Public Videos
+      const publishedVideos = state.videos.filter(v => v.status === 'published');
+      const publicVideosContainer = document.getElementById('publicVideosContainer');
+      publicVideosContainer.innerHTML = publishedVideos.map(v => `
+        <div class="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 flex flex-col">
+          <div class="aspect-video bg-black relative flex items-center justify-center group cursor-pointer" onclick="openVideoPlayer('${v.url}', '${v.title}')">
+            <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover opacity-60" />
+            <div class="absolute w-12 h-12 rounded-full bg-brand-saffron text-white flex items-center justify-center text-lg shadow-lg group-hover:scale-110 transition">
+              <i class="fa-solid fa-play ml-0.5"></i>
+            </div>
+            <span class="absolute bottom-2 left-2 text-[10px] bg-black/80 px-2 py-0.5 rounded text-amber-300 font-medium">${v.category}</span>
+          </div>
+          <div class="p-4">
+            <h4 class="text-sm font-semibold text-white leading-snug line-clamp-2">${v.title}</h4>
+            <span class="text-[11px] text-slate-400 mt-2 block"><i class="fa-regular fa-calendar mr-1"></i> ${v.date}</span>
+          </div>
+        </div>
+      `).join('');
+
+      // 9. Render Achievements
+      const publicAchievementsContainer = document.getElementById('publicAchievementsContainer');
+      publicAchievementsContainer.innerHTML = state.achievements.map(a => `
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 text-brand-saffron flex items-center justify-center text-xl mb-4">
+            <i class="${a.icon}"></i>
+          </div>
+          <span class="text-xs font-bold text-brand-saffron uppercase tracking-wider">${a.metric}</span>
+          <h3 class="text-lg font-bold text-slate-900 mt-1">${a.title}</h3>
+          <p class="text-xs text-slate-600 mt-2 leading-relaxed">${a.desc}</p>
+        </div>
+      `).join('');
+
+      // 10. Render Admin CMS Mobile Lists & Live Chats
+      renderAdminViewLists();
+      renderChatMessages();
+      renderAdminLiveChat();
+      populateLiveStreamInputs();
+    };
+
+    function renderPhotoGrid(photosToRender) {
+      const publicPhotosContainer = document.getElementById('publicPhotosContainer');
+      if (photosToRender.length === 0) {
+        publicPhotosContainer.innerHTML = `<div class="col-span-4 text-center py-8 text-slate-500 text-sm">No photos uploaded in this album.</div>`;
+        return;
+      }
+      publicPhotosContainer.innerHTML = photosToRender.map(photo => `
+        <div class="group relative rounded-2xl overflow-hidden aspect-square bg-slate-200 shadow-sm cursor-pointer" onclick="openPhotoModal('${photo.url}', '${photo.album}', '${photo.caption || ''}', '${photo.location}')">
+          <img src="${photo.url}" alt="${photo.album}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition p-3 flex flex-col justify-end text-white">
+            <span class="text-[10px] text-amber-300 font-bold">${photo.album}</span>
+            <p class="text-xs font-semibold leading-tight mt-0.5">${photo.location}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.filterPhotosByAlbum = function(albumName) {
+      const published = window.appState.photos.filter(p => p.status === 'published');
+      if (albumName === 'All') {
+        renderPhotoGrid(published);
+      } else {
+        renderPhotoGrid(published.filter(p => p.album === albumName));
+      }
+    };
+
+    window.openPhotoModal = function(url, title, caption, loc) {
+      window.openModal(title, `
+        <img src="${url}" class="w-full max-h-80 object-contain rounded-xl bg-slate-950 mb-3" />
+        <div class="text-xs text-slate-700">
+          <p class="font-semibold text-slate-900"><i class="fa-solid fa-location-dot text-brand-saffron mr-1"></i> ${loc}</p>
+          <p class="mt-1 text-slate-600 leading-relaxed">${caption}</p>
+        </div>
+      `, null, null);
+    };
+
+    window.openVideoPlayer = function(url, title) {
+      window.openModal(title, `
+        <div class="aspect-video bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center p-4 text-center">
+          <i class="fa-brands fa-youtube text-5xl text-rose-500 mb-2"></i>
+          <p class="text-white text-xs font-semibold">External Video Stream: ${url}</p>
+          <a href="${url}" target="_blank" class="mt-3 inline-block bg-rose-600 hover:bg-rose-700 text-white text-xs px-4 py-2 rounded-lg font-bold">
+            Open in YouTube App
+          </a>
+        </div>
+      `, null, null);
+    };
+
+    // Render Admin lists with Mobile-First swipeable-friendly cards and action buttons
+    function renderAdminViewLists() {
+      const state = window.appState;
+
+      // Stats
+      document.getElementById('statPhotos').innerText = state.photos.length;
+      document.getElementById('statNews').innerText = state.news.length;
+      document.getElementById('statEvents').innerText = state.events.length;
+      document.getElementById('adminPhotosCount').innerText = state.photos.length;
+      document.getElementById('adminNewsCount').innerText = state.news.length;
+      document.getElementById('adminEventsCount').innerText = state.events.length;
+      document.getElementById('adminVideosCount').innerText = state.videos.length;
+      document.getElementById('adminMessagesCount').innerText = state.grievances.length;
+
+      // Unread messages indicator
+      const unreadCount = state.grievances.filter(g => !g.read).length;
+      const unreadBadge = document.getElementById('unreadBadge');
+      if (unreadCount > 0) {
+        unreadBadge.classList.remove('hidden');
+      } else {
+        unreadBadge.classList.add('hidden');
+      }
+
+      // Recent Activity Log
+      const activityDiv = document.getElementById('adminRecentActivity');
+      if (state.activityLog.length === 0) {
+        activityDiv.innerHTML = `<p class="text-slate-500 text-[11px]">No changes made in this session yet.</p>`;
+      } else {
+        activityDiv.innerHTML = state.activityLog.map(act => `
+          <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-300">${act.msg}</span>
+            <span class="text-[9px] text-slate-500">${act.time}</span>
+          </div>
+        `).join('');
+      }
+
+      // Photos List in Admin
+      const photosList = document.getElementById('adminPhotosList');
+      photosList.innerHTML = state.photos.map(p => `
+        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center gap-3">
+          <img src="${p.url}" class="w-12 h-12 rounded-lg object-cover bg-slate-800 shrink-0" />
+          <div class="flex-grow min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h5 class="font-bold text-white truncate text-xs">${p.album}</h5>
+              <span class="text-[9px] px-1.5 py-0.2 rounded font-semibold ${p.status === 'published' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">${p.status}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 truncate">${p.location} • ${p.date}</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="togglePublishStatus('photos', '${p.id}')" title="Toggle Publish" class="p-1.5 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-eye${p.status === 'published' ? '' : '-slash'} text-xs"></i>
+            </button>
+            <button onclick="confirmDelete('photos', '${p.id}', '${p.album}')" title="Delete" class="p-1.5 text-rose-400 hover:text-rose-300">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      // News List in Admin
+      const newsList = document.getElementById('adminNewsList');
+      newsList.innerHTML = state.news.map(n => `
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-brand-saffron/20 text-brand-saffron font-bold">${n.category}</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded ${n.status === 'published' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'} font-semibold">${n.status}</span>
+            </div>
+            <h5 class="font-bold text-white text-xs mt-1 truncate">${n.title}</h5>
+            <p class="text-[10px] text-slate-400 mt-0.5">${n.date}</p>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="togglePublishStatus('news', '${n.id}')" class="p-1.5 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-eye${n.status === 'published' ? '' : '-slash'} text-xs"></i>
+            </button>
+            <button onclick="confirmDelete('news', '${n.id}', '${n.title}')" class="p-1.5 text-rose-400 hover:text-rose-300">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      // Events List in Admin
+      const eventsList = document.getElementById('adminEventsList');
+      eventsList.innerHTML = state.events.map(e => `
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">${e.category}</span>
+            <h5 class="font-bold text-white text-xs mt-1 truncate">${e.title}</h5>
+            <p class="text-[10px] text-slate-400 mt-0.5">${e.date} • ${e.time} • ${e.venue}</p>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="togglePublishStatus('events', '${e.id}')" class="p-1.5 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-eye${e.status === 'published' ? '' : '-slash'} text-xs"></i>
+            </button>
+            <button onclick="confirmDelete('events', '${e.id}', '${e.title}')" class="p-1.5 text-rose-400 hover:text-rose-300">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      // Videos List in Admin
+      const vidsList = document.getElementById('adminVideosList');
+      vidsList.innerHTML = state.videos.map(v => `
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <h5 class="font-bold text-white text-xs truncate">${v.title}</h5>
+            <p class="text-[10px] text-slate-400 mt-0.5">${v.category} • ${v.date}</p>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="confirmDelete('videos', '${v.id}', '${v.title}')" class="p-1.5 text-rose-400 hover:text-rose-300">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      // Grievances Inbox in Admin
+      const msgList = document.getElementById('adminMessagesList');
+      if (state.grievances.length === 0) {
+        msgList.innerHTML = `<p class="text-slate-500 text-center py-6 text-xs">No pending citizen messages.</p>`;
+      } else {
+        msgList.innerHTML = state.grievances.map(g => `
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs">${g.name}</span>
+              <span class="text-[10px] text-brand-saffron bg-brand-saffron/10 px-2 py-0.5 rounded font-medium">${g.category}</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">${g.message}</p>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800">
+              <span><i class="fa-solid fa-phone text-emerald-400 mr-1"></i> ${g.phone} (${g.location})</span>
+              <span>${g.date}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Boot sequence on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+      populateProfileInputs();
+      showToast('JanSeva Real-Time CMS Portal initialized', 'info');
+    });
+  </script>
+</body>
+</html>
